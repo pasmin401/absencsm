@@ -9,10 +9,11 @@
 ob_start();
 
 // ── App settings ─────────────────────────────────────────────
-define('DB_HOST',    'localhost');
-define('DB_NAME',    'attendance_db');
-define('DB_USER',    'root');         // ← your DB username
-define('DB_PASS',    '');             // ← your DB password
+define('DB_HOST',    $_ENV['DB_HOST']    ?? 'localhost');
+define('DB_NAME',    $_ENV['DB_NAME']    ?? 'attendance');
+define('DB_USER',    $_ENV['DB_USER']    ?? 'root');
+define('DB_PASS',    $_ENV['DB_PASS']    ?? '');
+define('DB_PORT',    $_ENV['DB_PORT']    ?? '3306');
 define('DB_CHARSET', 'utf8mb4');
 
 define('APP_NAME', 'AttendTrack');
