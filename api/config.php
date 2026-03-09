@@ -17,7 +17,7 @@ define('DB_PORT',    $_ENV['DB_PORT']    ?? '3306');
 define('DB_CHARSET', 'utf8mb4');
 
 define('APP_NAME', 'AttendTrack');
-define('APP_URL',  'http://localhost/attendance-app'); // ← your domain, no trailing slash
+define('APP_URL',  'http:absencsm.vercel.app'); // ← your domain, no trailing slash
 
 define('UPLOAD_DIR', '/tmp/uploads/');
 define('UPLOAD_URL', '/uploads/'); // Note: Vercel /tmp is ephemeral — use external storage (S3/Cloudinary) for production
