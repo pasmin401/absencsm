@@ -52,7 +52,7 @@ function updateUser($id, $data) {
     $sets = [];
     $vals = [];
     foreach ($data as $k => $v) {
-        $sets[] = "`$k` = ?";
+        $sets[] = "$k = ?";
         $vals[] = $v;
     }
     $vals[] = $id;
