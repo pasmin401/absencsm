@@ -82,15 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($file['size'] > 2 * 1024 * 1024) {
             $error = 'Max file size: 2MB.';
         } else {
-            // Delete old
-            if ($user['profile_pic'] && file_exists(UPLOAD_DIR . $user['profile_pic'])) {
-                unlink(UPLOAD_DIR . $user['profile_pic']);
-            }
-            $ext  = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $name = 'profile_' . $user['id'] . '_' . time() . '.' . strtolower($ext);
-            if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);
-            move_uploaded_file($file['tmp_name'], UPLOAD_DIR . $name);
-            updateUser($user['id'], ['profile_pic' => $name]);
+            // On Vercel filesystem is ephemeral — store photo as base64 data URL in DB
+            $raw      = file_get_contents($file['tmp_name']);
+            $mime     = $file['type'];
+            $b64      = base64_encode($raw);
+            $dataUrl  = "data:{$mime};base64,{$b64}";
+            updateUser($user['id'], ['profile_pic' => $dataUrl]);
             $success = 'Profile photo updated.';
             $user = getUserById($user['id']);
         }
@@ -147,8 +144,12 @@ $otDays = count(array_filter($workStats, fn($r) => $r['ot_checkin_time']));
     <!-- Profile Header -->
     <div class="profile-header">
       <div class="profile-avatar">
-        <?php if ($user['profile_pic']): ?>
-          <img src="<?= $user['profile_pic'] ?>" alt="Profile">
+        <?php 
+          $pic = $user['profile_pic'] ?? '';
+          $isDataUrl = str_starts_with($pic, 'data:');
+        ?>
+        <?php if ($pic && $isDataUrl): ?>
+          <img src="<?= $pic ?>" alt="Profile">
         <?php else: ?>
           <?= e($initials) ?>
         <?php endif; ?>
