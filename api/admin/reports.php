@@ -338,7 +338,7 @@ $activePage = 'reports';
                 <div style="display:flex;gap:4px;flex-wrap:wrap">
                   <?php foreach(['checkin_photo'=>'CI','checkout_photo'=>'CO','ot_checkin_photo'=>'OT↑','ot_checkout_photo'=>'OT↓'] as $col=>$label): ?>
                     <?php if ($r[$col]): ?>
-                      <img src="<?= UPLOAD_URL . e($r[$col]) ?>" class="photo-thumb"
+                      <img src="<?= $r[$col] ?>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer;"
                            title="<?= $label ?>"
                            onclick="document.getElementById('lightbox-img').src=this.src; document.getElementById('lightbox').classList.add('open')">
                     <?php endif; ?>

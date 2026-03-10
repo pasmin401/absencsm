@@ -25,7 +25,17 @@ $canOtCheckOut  = $today && $today['ot_checkin_time'] && !$today['ot_checkout_ti
 <style>
 .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
 .geo-coords { font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--txt3); }
-.record-photo-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+.record-photo-grid { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.photo-avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+.photo-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  transition: transform .2s, border-color .2s;
+}
+.photo-avatar:hover { transform: scale(1.15); border-color: var(--primary); }
+.photo-avatar-label { font-size: .6rem; color: var(--txt3); font-weight: 600; text-transform: uppercase; }
 .checkin-status-dot {
   display: inline-block;
   width: 8px; height: 8px;
@@ -221,8 +231,10 @@ $canOtCheckOut  = $today && $today['ot_checkin_time'] && !$today['ot_checkout_ti
                 <div class="record-photo-grid">
                   <?php foreach(['checkin_photo'=>'CI','checkout_photo'=>'CO','ot_checkin_photo'=>'OT-IN','ot_checkout_photo'=>'OT-OUT'] as $col=>$label): ?>
                     <?php if ($r[$col]): ?>
-                      <img src="<?= UPLOAD_URL . e($r[$col]) ?>" class="photo-thumb"
-                           title="<?= $label ?>" onclick="openLightbox(this.src)">
+                      <div class="photo-avatar-wrap" title="<?= $label ?>" onclick="openLightbox('<?= htmlspecialchars($r[$col], ENT_QUOTES) ?>')">
+                        <img src="<?= $r[$col] ?>" class="photo-avatar">
+                        <span class="photo-avatar-label"><?= $label ?></span>
+                      </div>
                     <?php endif; ?>
                   <?php endforeach; ?>
                 </div>

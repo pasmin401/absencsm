@@ -148,7 +148,7 @@ $otDays = count(array_filter($workStats, fn($r) => $r['ot_checkin_time']));
     <div class="profile-header">
       <div class="profile-avatar">
         <?php if ($user['profile_pic']): ?>
-          <img src="<?= UPLOAD_URL . e($user['profile_pic']) ?>" alt="Profile">
+          <img src="<?= $user['profile_pic'] ?>" alt="Profile">
         <?php else: ?>
           <?= e($initials) ?>
         <?php endif; ?>

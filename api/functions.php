@@ -140,38 +140,22 @@ function getAllAttendance($from = null, $to = null, $userId = null, $limit = 500
 function savePhoto($base64Data, $prefix = 'photo') {
     if (empty($base64Data)) return null;
 
-    // Strip data URL prefix e.g. "data:image/jpeg;base64,..."
-    if (preg_match('/^data:image\/(\w+);base64,/i', $base64Data, $m)) {
-        $ext  = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
-        $data = substr($base64Data, strpos($base64Data, ',') + 1);
-    } else {
-        $ext  = 'jpg';
-        $data = $base64Data;
+    // Vercel filesystem is ephemeral — store photo as base64 data URL directly in DB
+    // Ensure it has the data:image prefix
+    if (!preg_match('/^data:image\//i', $base64Data)) {
+        $data = preg_replace('/\s+/', '', $base64Data);
+        $base64Data = 'data:image/jpeg;base64,' . $data;
     }
 
-    // Sanitize: remove whitespace that breaks base64_decode on some servers
-    $data = preg_replace('/\s+/', '', $data);
-
-    // Strict decode — returns false on bad input
+    // Validate it's a real image
+    $comma = strpos($base64Data, ',');
+    if ($comma === false) return null;
+    $data    = preg_replace('/\s+/', '', substr($base64Data, $comma + 1));
     $decoded = base64_decode($data, true);
     if ($decoded === false || strlen($decoded) < 100) return null;
 
-    // Ensure upload directory exists and is writable
-    if (!is_dir(UPLOAD_DIR)) {
-        if (!mkdir(UPLOAD_DIR, 0755, true)) return null;
-    }
-    if (!is_writable(UPLOAD_DIR)) {
-        chmod(UPLOAD_DIR, 0755);
-        if (!is_writable(UPLOAD_DIR)) return null;
-    }
-
-    $filename = $prefix . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $path     = UPLOAD_DIR . $filename;
-
-    // Check write actually succeeded
-    if (file_put_contents($path, $decoded) === false) return null;
-
-    return $filename;
+    // Return the full data URL to be stored in the DB column
+    return $base64Data;
 }
 
 function checkIn($userId, $lat, $lng, $photoBase64) {

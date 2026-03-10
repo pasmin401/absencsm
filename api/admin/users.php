@@ -246,7 +246,7 @@ function fmtWorkTime($t) {
                               color:#fff;display:flex;align-items:center;justify-content:center;
                               font-weight:700;font-size:.8rem;flex-shrink:0;overflow:hidden">
                     <?php if ($u['profile_pic']): ?>
-                      <img src="<?= UPLOAD_URL . e($u['profile_pic']) ?>"
+                      <img src="<?= $u['profile_pic'] ?>"
                            alt="" style="width:100%;height:100%;object-fit:cover">
                     <?php else: ?>
                       <?= strtoupper(substr($u['username'], 0, 2)) ?>
