@@ -1,0 +1,30 @@
+{
+  "functions": {
+    "api/index.php":               { "runtime": "vercel-php@0.7.2" },
+    "api/dashboard.php":           { "runtime": "vercel-php@0.7.2" },
+    "api/register.php":            { "runtime": "vercel-php@0.7.2" },
+    "api/logout.php":              { "runtime": "vercel-php@0.7.2" },
+    "api/profile.php":             { "runtime": "vercel-php@0.7.2" },
+    "api/forgot-password.php":     { "runtime": "vercel-php@0.7.2" },
+    "api/install.php":             { "runtime": "vercel-php@0.7.2" },
+    "api/attendance-action.php":   { "runtime": "vercel-php@0.7.2" },
+    "api/admin/index.php":         { "runtime": "vercel-php@0.7.2" },
+    "api/admin/users.php":         { "runtime": "vercel-php@0.7.2" },
+    "api/admin/reports.php":       { "runtime": "vercel-php@0.7.2" }
+  },
+  "rewrites": [
+    { "source": "/assets/:path*",         "destination": "/public/assets/:path*" },
+    { "source": "/uploads/:path*",        "destination": "/uploads/:path*" },
+    { "source": "/admin/index",           "destination": "/api/admin/index.php" },
+    { "source": "/admin/users",           "destination": "/api/admin/users.php" },
+    { "source": "/admin/reports",         "destination": "/api/admin/reports.php" },
+    { "source": "/api/attendance-action", "destination": "/api/attendance-action.php" },
+    { "source": "/dashboard",             "destination": "/api/dashboard.php" },
+    { "source": "/register",              "destination": "/api/register.php" },
+    { "source": "/logout",                "destination": "/api/logout.php" },
+    { "source": "/profile",               "destination": "/api/profile.php" },
+    { "source": "/forgot-password",       "destination": "/api/forgot-password.php" },
+    { "source": "/install",               "destination": "/api/install.php" },
+    { "source": "/",                      "destination": "/api/index.php" }
+  ]
+}
