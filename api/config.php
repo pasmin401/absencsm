@@ -18,7 +18,11 @@ define('TIMEZONE', 'Asia/Jakarta');
 date_default_timezone_set(TIMEZONE);
 
 // ── Session ───────────────────────────────────────────────────
+// Vercel serverless: sessions must use /tmp, set secure cookie settings
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.save_path', '/tmp');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Lax');
     session_start();
 }
 
@@ -64,8 +68,16 @@ function getDB() {
 
 // ── Auth helpers ──────────────────────────────────────────────
 function isLoggedIn() {
-    return isset($_SESSION['user_id'], $_SESSION['last_activity'])
-        && (time() - $_SESSION['last_activity']) < SESSION_TIMEOUT;
+    if (!isset($_SESSION['user_id'], $_SESSION['last_activity'], $_SESSION['role'])) {
+        return false;
+    }
+    if ((time() - $_SESSION['last_activity']) >= SESSION_TIMEOUT) {
+        // Session expired — destroy it so it can't cause redirect loops
+        session_unset();
+        session_destroy();
+        return false;
+    }
+    return true;
 }
 
 function isAdmin() {
@@ -74,6 +86,8 @@ function isAdmin() {
 
 function requireLogin() {
     if (!isLoggedIn()) {
+        // Clear any stale session data before redirecting
+        session_unset();
         header('Location: /?msg=session_expired');
         exit;
     }

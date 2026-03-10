@@ -2,8 +2,11 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/functions.php';
 
-if (isLoggedIn()) {
-    header('Location: ' . (isAdmin() ? '/admin/index' : '/dashboard'));
+// If already logged in, redirect to appropriate page
+// Guard: only redirect if we didn't just come from a redirect (prevents loops)
+if (isLoggedIn() && !isset($_GET['msg'])) {
+    $dest = isAdmin() ? '/admin/index' : '/dashboard';
+    header('Location: ' . $dest);
     exit;
 }
 
