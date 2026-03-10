@@ -3,7 +3,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/functions.php';
 
 if (isLoggedIn()) {
-    header('Location: ' . (isAdmin() ? 'admin/index.php' : 'dashboard.php'));
+    header('Location: ' . (isAdmin() ? '/admin/index' : '/dashboard'));
     exit;
 }
 
