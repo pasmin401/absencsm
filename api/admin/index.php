@@ -23,7 +23,7 @@ $todayRecords = $db->query("
 $weeklyData = $db->query("
     SELECT work_date, COUNT(*) as cnt
     FROM attendance
-    WHERE work_date >= DATE_SUB('$today', INTERVAL 6 DAY)
+    WHERE work_date >= CURRENT_DATE - INTERVAL '6 days'
     GROUP BY work_date
     ORDER BY work_date ASC
 ")->fetchAll();
@@ -32,11 +32,11 @@ $weeklyData = $db->query("
 $topOT = $db->query("
     SELECT u.username, u.department,
            COUNT(a.id) as ot_days,
-           SUM(TIMESTAMPDIFF(MINUTE, a.ot_checkin_time, a.ot_checkout_time)) as ot_minutes
+           SUM(EXTRACT(EPOCH FROM (a.ot_checkout_time::time - a.ot_checkin_time::time))/60)::int as ot_minutes
     FROM attendance a
     JOIN users u ON a.user_id = u.id
-    WHERE a.work_date LIKE '$month%' AND a.ot_checkin_time IS NOT NULL AND a.ot_checkout_time IS NOT NULL
-    GROUP BY a.user_id
+    WHERE DATE_TRUNC('month', a.work_date) = DATE_TRUNC('month', CURRENT_DATE) AND a.ot_checkin_time IS NOT NULL AND a.ot_checkout_time IS NOT NULL
+    GROUP BY a.user_id, u.username, u.department
     ORDER BY ot_minutes DESC
     LIMIT 5
 ")->fetchAll();

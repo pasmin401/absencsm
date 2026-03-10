@@ -42,7 +42,7 @@ function createUser($username, $email, $password, $role = 'user') {
         $uid = $row ? (int)$row['id'] : 0;
     }
     if ($uid < 1) {
-        throw new RuntimeException('Could not retrieve new user ID. Please check that the users table id column has AUTO_INCREMENT set.');
+        throw new RuntimeException('Could not retrieve new user ID. Insert may have failed silently.');
     }
     return $uid;
 }
@@ -235,11 +235,19 @@ function getDashboardStats() {
     $today = date('Y-m-d');
     $month = date('Y-m');
     $stats = [];
-    $stats['total_users']   = $db->query("SELECT COUNT(*) FROM users WHERE role='user'")->fetchColumn();
-    $stats['present_today'] = $db->query("SELECT COUNT(*) FROM attendance WHERE work_date='$today' AND checkin_time IS NOT NULL")->fetchColumn();
-    $stats['absent_today']  = $stats['total_users'] - $stats['present_today'];
-    $stats['ot_today']      = $db->query("SELECT COUNT(*) FROM attendance WHERE work_date='$today' AND ot_checkin_time IS NOT NULL")->fetchColumn();
-    $stats['month_records'] = $db->query("SELECT COUNT(*) FROM attendance WHERE work_date LIKE '$month%'")->fetchColumn();
+    $s1 = $db->prepare("SELECT COUNT(*) FROM users WHERE role='user'");
+    $s1->execute(); $stats['total_users'] = (int)$s1->fetchColumn();
+
+    $s2 = $db->prepare("SELECT COUNT(*) FROM attendance WHERE work_date = ? AND checkin_time IS NOT NULL");
+    $s2->execute([$today]); $stats['present_today'] = (int)$s2->fetchColumn();
+
+    $stats['absent_today'] = max(0, $stats['total_users'] - $stats['present_today']);
+
+    $s3 = $db->prepare("SELECT COUNT(*) FROM attendance WHERE work_date = ? AND ot_checkin_time IS NOT NULL");
+    $s3->execute([$today]); $stats['ot_today'] = (int)$s3->fetchColumn();
+
+    $s4 = $db->prepare("SELECT COUNT(*) FROM attendance WHERE DATE_TRUNC('month', work_date) = DATE_TRUNC('month', CURRENT_DATE)");
+    $s4->execute(); $stats['month_records'] = (int)$s4->fetchColumn();
     return $stats;
 }
 
@@ -271,7 +279,7 @@ function createResetToken($email) {
 
 function validateResetToken($token) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+    $stmt = $db->prepare("SELECT * FROM password_resets WHERE token = ? AND created_at > NOW() - INTERVAL '1 hour'");
     $stmt->execute([$token]);
     return $stmt->fetch();
 }

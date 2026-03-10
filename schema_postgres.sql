@@ -81,3 +81,10 @@ VALUES
   ('siti_nurhaliza', 'siti.nurhaliza@company.com', '$2y$10$TKh8H1.PfuA38Xe.aMtGtOQl8g/l4RVNRSO1Z3DBNZ9MUu4GnuUa', 'user', '+62 812-0001-0004', 'HR',          '08:00:00', '17:00:00', 1, NOW()),
   ('budi_santoso',   'budi.santoso@company.com',   '$2y$10$TKh8H1.PfuA38Xe.aMtGtOQl8g/l4RVNRSO1Z3DBNZ9MUu4GnuUa', 'user', '+62 812-0001-0005', 'Operations',  '07:00:00', '16:00:00', 1, NOW())
 ON CONFLICT (username) DO NOTHING;
+
+-- Sessions table (for Vercel serverless PHP session storage)
+CREATE TABLE IF NOT EXISTS php_sessions (
+  id         VARCHAR(128) PRIMARY KEY,
+  data       TEXT         NOT NULL DEFAULT '',
+  updated_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
