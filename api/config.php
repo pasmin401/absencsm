@@ -108,7 +108,9 @@ function getDB() {
         $opts = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
+            // Must be TRUE for PostgreSQL on Vercel — prevents "cached plan must not
+            // change result type" errors after column type changes (e.g. VARCHAR→TEXT)
+            PDO::ATTR_EMULATE_PREPARES   => true,
         ];
 
         $pdo = new PDO($dsn, $user, $password, $opts);
