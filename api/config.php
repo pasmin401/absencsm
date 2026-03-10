@@ -17,12 +17,76 @@ define('TIMEZONE', 'Asia/Jakarta');
 
 date_default_timezone_set(TIMEZONE);
 
+// ── Database Session Handler (required for Vercel serverless) ─
+// Vercel runs each request on a different instance — /tmp doesn't persist.
+// We store sessions in the postgres php_sessions table instead.
+class DBSessionHandler implements SessionHandlerInterface {
+    private $pdo;
+
+    public function open($path, $name): bool {
+        try {
+            $host     = $_ENV['PGHOST']     ?? getenv('PGHOST');
+            $dbname   = $_ENV['PGDATABASE'] ?? getenv('PGDATABASE');
+            $user     = $_ENV['PGUSER']     ?? getenv('PGUSER');
+            $password = $_ENV['PGPASSWORD'] ?? getenv('PGPASSWORD');
+            $dsn = "pgsql:host={$host};port=5432;dbname={$dbname};sslmode=require";
+            $this->pdo = new PDO($dsn, $user, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+        } catch (Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
+    public function close(): bool { return true; }
+
+    public function read($id): string|false {
+        try {
+            $stmt = $this->pdo->prepare("SELECT data FROM php_sessions WHERE id = ?");
+            $stmt->execute([$id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ? $row['data'] : '';
+        } catch (Exception $e) { return ''; }
+    }
+
+    public function write($id, $data): bool {
+        try {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO php_sessions (id, data, updated_at)
+                 VALUES (?, ?, NOW())
+                 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()"
+            );
+            $stmt->execute([$id, $data]);
+            return true;
+        } catch (Exception $e) { return false; }
+    }
+
+    public function destroy($id): bool {
+        try {
+            $this->pdo->prepare("DELETE FROM php_sessions WHERE id = ?")->execute([$id]);
+            return true;
+        } catch (Exception $e) { return false; }
+    }
+
+    public function gc($max_lifetime): int|false {
+        try {
+            $stmt = $this->pdo->prepare(
+                "DELETE FROM php_sessions WHERE updated_at < NOW() - INTERVAL '1 second' * ?"
+            );
+            $stmt->execute([$max_lifetime]);
+            return $stmt->rowCount();
+        } catch (Exception $e) { return false; }
+    }
+}
+
 // ── Session ───────────────────────────────────────────────────
-// Vercel serverless: sessions must use /tmp, set secure cookie settings
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.save_path', '/tmp');
+    $handler = new DBSessionHandler();
+    session_set_save_handler($handler, true);
     ini_set('session.cookie_httponly', '1');
     ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.gc_maxlifetime', SESSION_TIMEOUT);
     session_start();
 }
 
