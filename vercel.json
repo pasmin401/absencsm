@@ -4,8 +4,8 @@
     { "src": "public/**",    "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/assets/(.*)", "dest": "/public/assets/$1" },
-    { "src": "/uploads/(.*)", "dest": "/uploads/$1" },
+    { "src": "/assets/(.*)",            "dest": "/public/assets/$1" },
+    { "src": "/uploads/(.*)",           "dest": "/uploads/$1" },
     { "src": "/admin/index",            "dest": "/api/admin/index.php" },
     { "src": "/admin/users",            "dest": "/api/admin/users.php" },
     { "src": "/admin/reports",          "dest": "/api/admin/reports.php" },
@@ -16,6 +16,6 @@
     { "src": "/profile",                "dest": "/api/profile.php" },
     { "src": "/forgot-password",        "dest": "/api/forgot-password.php" },
     { "src": "/install",                "dest": "/api/install.php" },
-    { "src": "/(.*)",                   "dest": "/api/index.php" }
+    { "src": "/",                       "dest": "/api/index.php" }
   ]
 }
