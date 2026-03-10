@@ -5,10 +5,6 @@
 $user = getUserById($_SESSION['user_id']);
 $initials = strtoupper(substr($user['username'] ?? 'U', 0, 2));
 $role = $_SESSION['role'] ?? 'user';
-
-// Only show profile pic if stored as base64 data URL (Vercel has no persistent filesystem)
-$pic       = $user['profile_pic'] ?? '';
-$isDataUrl = str_starts_with($pic, 'data:');
 ?>
 <div id="toast-container"></div>
 
@@ -22,7 +18,7 @@ $isDataUrl = str_starts_with($pic, 'data:');
   <header class="topbar">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div class="brand">
-      <div class="icon"><img src="/assets/logo.svg" alt="Logo" style="width:22px;height:22px;object-fit:contain;"></div>
+      <div class="icon">📋</div>
       <?= e(APP_NAME) ?>
     </div>
 
@@ -34,8 +30,8 @@ $isDataUrl = str_starts_with($pic, 'data:');
       <div class="dropdown">
         <button class="avatar-btn" onclick="toggleDropdown()">
           <div class="avatar">
-            <?php if ($isDataUrl): ?>
-              <img src="<?= $pic ?>" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;">
+            <?php if ($user['profile_pic']): ?>
+              <img src="<?= UPLOAD_URL . e($user['profile_pic']) ?>" alt="">
             <?php else: ?>
               <?= e($initials) ?>
             <?php endif; ?>
@@ -44,53 +40,50 @@ $isDataUrl = str_starts_with($pic, 'data:');
           <span style="font-size:.75rem;color:var(--txt3)">▼</span>
         </button>
         <div class="dropdown-menu" id="user-dropdown">
-          <a class="dropdown-item" href="/profile">👤 My Profile</a>
+          <a class="dropdown-item" href="/profile.php">👤 My Profile</a>
           <?php if ($role === 'admin'): ?>
-          <a class="dropdown-item" href="/admin/index">⚙️ Admin Panel</a>
+          <a class="dropdown-item" href="/admin/index.php">⚙️ Admin Panel</a>
           <?php endif; ?>
-          <a class="dropdown-item" href="/dashboard">🏠 Dashboard</a>
+          <a class="dropdown-item" href="/dashboard.php">🏠 Dashboard</a>
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item danger" href="/logout">🚪 Log Out</a>
+          <a class="dropdown-item danger" href="/logout.php">🚪 Log Out</a>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Sidebar backdrop (mobile only) -->
-  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
-
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
     <div class="nav-section-label">Main</div>
 
-    <a href="/dashboard"
+    <a href="/dashboard.php"
        class="nav-item <?= ($activePage ?? '') === 'dashboard' ? 'active' : '' ?>">
       <span>🏠</span> Dashboard
     </a>
 
-    <a href="/profile"
+    <a href="/profile.php"
        class="nav-item <?= ($activePage ?? '') === 'profile' ? 'active' : '' ?>">
       <span>👤</span> My Profile
     </a>
 
     <?php if ($role === 'admin'): ?>
     <div class="nav-section-label">Admin</div>
-    <a href="/admin/index"
+    <a href="/admin/index.php"
        class="nav-item <?= ($activePage ?? '') === 'admin-dashboard' ? 'active' : '' ?>">
       <span>📊</span> Admin Dashboard
     </a>
-    <a href="/admin/users"
+    <a href="/admin/users.php"
        class="nav-item <?= ($activePage ?? '') === 'users' ? 'active' : '' ?>">
       <span>👥</span> User Management
     </a>
-    <a href="/admin/reports"
+    <a href="/admin/reports.php"
        class="nav-item <?= ($activePage ?? '') === 'reports' ? 'active' : '' ?>">
       <span>📑</span> Reports & Export
     </a>
     <?php endif; ?>
 
     <div class="sidebar-footer">
-      <a href="/logout" class="nav-item">
+      <a href="/logout.php" class="nav-item">
         <span>🚪</span> Log Out
       </a>
     </div>
