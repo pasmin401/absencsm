@@ -393,13 +393,15 @@ input.has-icon-left { padding-left: 44px; }
   font-size: 1rem;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
 }
 .avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  display: block;
   border-radius: 50%;
 }
 
@@ -811,13 +813,15 @@ tbody td { padding: 13px 16px; color: var(--txt); vertical-align: middle; }
   overflow: hidden;
   flex-shrink: 0;
   border: 3px solid var(--primary-lt);
+  position: relative;
 }
 .profile-avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  display: block;
   border-radius: 50%;
 }
 
