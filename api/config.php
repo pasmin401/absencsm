@@ -1,64 +1,60 @@
 <?php
 // ============================================================
-// ATTENDANCE APP – Configuration
-// Edit DB_* and APP_URL before deploying
+// ATTENDANCE APP – Configuration (Vercel Postgres / Neon)
 // ============================================================
 
-// Buffer ALL output — prevents "headers already sent" from any
-// stray whitespace in included files
 ob_start();
 
 // ── App settings ─────────────────────────────────────────────
-define('DB_HOST',    $_ENV['DB_HOST']    ?? 'localhost');
-define('DB_NAME',    $_ENV['DB_NAME']    ?? 'attendance');
-define('DB_USER',    $_ENV['DB_USER']    ?? 'root');
-define('DB_PASS',    $_ENV['DB_PASS']    ?? '');
-define('DB_PORT',    $_ENV['DB_PORT']    ?? '3306');
-define('DB_CHARSET', 'utf8mb4');
-
 define('APP_NAME', 'AttendTrack');
-define('APP_URL',  'http:absencsm.vercel.app'); // ← your domain, no trailing slash
+define('APP_URL',  'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
 
 define('UPLOAD_DIR', '/tmp/uploads/');
-define('UPLOAD_URL', '/uploads/'); // Note: Vercel /tmp is ephemeral — use external storage (S3/Cloudinary) for production
+define('UPLOAD_URL', '/uploads/');
 
-define('SESSION_TIMEOUT', 3600);         // seconds (1 hour)
-define('TIMEZONE',        'Asia/Jakarta'); // your timezone
+define('SESSION_TIMEOUT', 3600);
+define('TIMEZONE', 'Asia/Jakarta');
 
 date_default_timezone_set(TIMEZONE);
 
 // ── Session ───────────────────────────────────────────────────
-// Only call session_start() once; guard against double-include
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ── Database connection (PDO singleton) ───────────────────────
+// ── Database connection (PDO PostgreSQL via Vercel Postgres) ──
 function getDB() {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
 
     try {
-        $dsn  = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+        // Vercel injects POSTGRES_* env vars automatically
+        $host     = $_ENV['PGHOST']     ?? getenv('PGHOST');
+        $dbname   = $_ENV['PGDATABASE'] ?? getenv('PGDATABASE');
+        $user     = $_ENV['PGUSER']     ?? getenv('PGUSER');
+        $password = $_ENV['PGPASSWORD'] ?? getenv('PGPASSWORD');
+        $port     = '5432';
+
+        $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
+
         $opts = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, $opts);
+
+        $pdo = new PDO($dsn, $user, $password, $opts);
+
     } catch (PDOException $e) {
-        // Show a friendly error page instead of raw JSON output
-        // (raw output would break header() calls on every page)
         http_response_code(500);
         echo '<!DOCTYPE html><html><head><meta charset="UTF-8">
               <title>Database Error</title>
               <style>body{font-family:sans-serif;max-width:600px;margin:80px auto;padding:20px}
               .box{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:24px}
               h2{color:#991b1b;margin:0 0 12px}pre{font-size:.85rem;color:#7f1d1d;white-space:pre-wrap}</style>
-              </head><body>
-              <div class="box">
+              </head><body><div class="box">
               <h2>⚠️ Database Connection Failed</h2>
-              <p>The app cannot connect to the database. Please check your <code>config.php</code> settings.</p>
+              <p>Check your Vercel Postgres environment variables (PGHOST, PGDATABASE, PGUSER, PGPASSWORD).</p>
               <pre>' . htmlspecialchars($e->getMessage()) . '</pre>
               </div></body></html>';
         exit;
@@ -76,8 +72,6 @@ function isAdmin() {
     return isLoggedIn() && ($_SESSION['role'] ?? '') === 'admin';
 }
 
-// All internal redirects use relative paths so the app works in
-// any subdirectory without touching APP_URL
 function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: /?msg=session_expired');
@@ -94,9 +88,12 @@ function requireAdmin() {
     }
 }
 
-// Generic redirect helper (kept for backward compat)
 function redirect($url) {
     header('Location: ' . $url);
     exit;
 }
 
+// ── Helper: escape HTML ───────────────────────────────────────
+function e($str) {
+    return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
+}

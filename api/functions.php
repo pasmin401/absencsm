@@ -186,15 +186,10 @@ function checkIn($userId, $lat, $lng, $photoBase64) {
         $stmt->execute([$now, $lat, $lng, $photo, $existing['id']]);
         return $existing['id'];
     } else {
-        $stmt = $db->prepare("INSERT INTO attendance (user_id,work_date,checkin_time,checkin_lat,checkin_lng,checkin_photo,status) VALUES (?,?,?,?,?,?,'present')");
+        $stmt = $db->prepare("INSERT INTO attendance (user_id,work_date,checkin_time,checkin_lat,checkin_lng,checkin_photo,status) VALUES (?,?,?,?,?,?,'present') RETURNING id");
         $stmt->execute([$userId, $today, $now, $lat, $lng, $photo]);
-        $id = (int)$db->lastInsertId();
-        if ($id < 1) {
-            $row = $db->prepare("SELECT id FROM attendance WHERE user_id=? AND work_date=? LIMIT 1");
-            $row->execute([$userId, $today]);
-            $r = $row->fetch();
-            $id = $r ? (int)$r['id'] : 0;
-        }
+        $row = $stmt->fetch();
+        $id = $row ? (int)$row['id'] : 0;
         return $id ?: false;
     }
 }
@@ -269,7 +264,7 @@ function createResetToken($email) {
     if (!$user) return false;
     $token = bin2hex(random_bytes(32));
     $db->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$email]);
-    $stmt = $db->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW())");
+    $stmt = $db->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW()) RETURNING id");
     $stmt->execute([$email, $token]);
     return $token;
 }
