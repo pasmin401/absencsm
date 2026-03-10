@@ -72,21 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ── Profile Photo ──
-    if ($section === 'photo' && isset($_FILES['profile_pic'])) {
-        $file = $_FILES['profile_pic'];
-        $allowed = ['image/jpeg','image/png','image/gif','image/webp'];
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            $error = 'Upload error. Please try again.';
-        } elseif (!in_array($file['type'], $allowed)) {
-            $error = 'Only JPG, PNG, GIF, WEBP allowed.';
-        } elseif ($file['size'] > 2 * 1024 * 1024) {
-            $error = 'Max file size: 2MB.';
+    if ($section === 'photo' && !empty($_POST['profile_pic_b64'])) {
+        $dataUrl = $_POST['profile_pic_b64'];
+        // Validate it's a real base64 data URL
+        if (!preg_match('/^data:image\/(jpeg|png|gif|webp);base64,/i', $dataUrl)) {
+            $error = 'Invalid image format.';
         } else {
-            // On Vercel filesystem is ephemeral — store photo as base64 data URL in DB
-            $raw      = file_get_contents($file['tmp_name']);
-            $mime     = $file['type'];
-            $b64      = base64_encode($raw);
-            $dataUrl  = "data:{$mime};base64,{$b64}";
             updateUser($user['id'], ['profile_pic' => $dataUrl]);
             $success = 'Profile photo updated.';
             $user = getUserById($user['id']);
@@ -205,16 +196,18 @@ $otDays = count(array_filter($workStats, fn($r) => $r['ot_checkin_time']));
         <div class="card">
           <div class="card-header"><h2>📸 Profile Photo</h2></div>
           <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
+            <!-- Hidden canvas used to resize image before upload -->
+            <canvas id="resize-canvas" style="display:none"></canvas>
+            <form method="POST" id="photo-form">
               <input type="hidden" name="section" value="photo">
-              <label class="photo-upload-zone" for="profile_pic_input">
+              <input type="hidden" name="profile_pic_b64" id="profile_pic_b64">
+              <label class="photo-upload-zone" for="profile_pic_input" id="upload-label">
                 <div style="font-size:2.5rem;margin-bottom:8px">📷</div>
                 <div style="font-weight:600;margin-bottom:4px">Click to upload photo</div>
-                <div class="text-muted">JPG, PNG, GIF, WEBP · Max 2MB</div>
+                <div class="text-muted">JPG, PNG, GIF, WEBP · Max 5MB</div>
               </label>
-              <input type="file" id="profile_pic_input" name="profile_pic"
-                     accept="image/*" style="display:none"
-                     onchange="this.form.submit()">
+              <input type="file" id="profile_pic_input" accept="image/*" style="display:none"
+                     onchange="resizeAndUpload(this)">
             </form>
           </div>
         </div>
@@ -354,6 +347,42 @@ function toggleSidebar() {
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('sidebar-backdrop').classList.remove('visible');
+}
+</script>
+
+<script>
+function resizeAndUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const label = document.getElementById('upload-label');
+  label.innerHTML = '<div style="font-size:1.5rem">⏳</div><div>Resizing...</div>';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Resize to max 300x300 for avatar use
+      const MAX = 300;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+      else        { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+
+      const canvas = document.getElementById('resize-canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      document.getElementById('profile_pic_b64').value = dataUrl;
+
+      label.innerHTML = '<div style="font-size:1.5rem">✅</div><div style="font-weight:600">Photo ready — saving...</div>';
+      document.getElementById('photo-form').submit();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 </script>
 </body>
