@@ -5,8 +5,7 @@
 $user = getUserById($_SESSION['user_id']);
 $initials = strtoupper(substr($user['username'] ?? 'U', 0, 2));
 $role = $_SESSION['role'] ?? 'user';
-
-$pic       = $user['profile_pic'] ?? '';
+$pic = $user['profile_pic'] ?? '';
 $isDataUrl = str_starts_with($pic, 'data:');
 ?>
 <div id="toast-container"></div>
@@ -34,8 +33,7 @@ $isDataUrl = str_starts_with($pic, 'data:');
         <button class="avatar-btn" onclick="toggleDropdown()">
           <div class="avatar" style="position:relative;overflow:hidden;width:36px;height:36px;border-radius:50%;flex-shrink:0;">
             <?php if ($isDataUrl): ?>
-              <img src="<?= $pic ?>" alt=""
-                   style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;">
+              <img src="<?= $pic ?>" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;">
             <?php else: ?>
               <?= e($initials) ?>
             <?php endif; ?>
