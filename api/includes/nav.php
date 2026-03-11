@@ -5,6 +5,8 @@
 $user = getUserById($_SESSION['user_id']);
 $initials = strtoupper(substr($user['username'] ?? 'U', 0, 2));
 $role = $_SESSION['role'] ?? 'user';
+$pic = $user['profile_pic'] ?? '';
+$isDataUrl = str_starts_with($pic, 'data:');
 ?>
 <div id="toast-container"></div>
 
@@ -40,17 +42,18 @@ $role = $_SESSION['role'] ?? 'user';
           <span style="font-size:.75rem;color:var(--txt3)">▼</span>
         </button>
         <div class="dropdown-menu" id="user-dropdown">
-          <a class="dropdown-item" href="/profile.php">👤 My Profile</a>
+          <a class="dropdown-item" href="/profile">👤 My Profile</a>
           <?php if ($role === 'admin'): ?>
-          <a class="dropdown-item" href="/admin/index.php">⚙️ Admin Panel</a>
+          <a class="dropdown-item" href="/admin/index">⚙️ Admin Panel</a>
           <?php endif; ?>
-          <a class="dropdown-item" href="/dashboard.php">🏠 Dashboard</a>
+          <a class="dropdown-item" href="/dashboard">🏠 Dashboard</a>
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item danger" href="/logout.php">🚪 Log Out</a>
+          <a class="dropdown-item danger" href="/logout">🚪 Log Out</a>
         </div>
       </div>
     </div>
   </header>
+
 
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
